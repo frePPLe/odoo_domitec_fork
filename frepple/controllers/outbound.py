@@ -1136,6 +1136,12 @@ class exporter(object):
                 "weight",
                 "product_template_attribute_value_ids",
                 "price_extra",
+                "line_id",
+                "rubro_id",
+                "subrubro_id",
+                "presentation_id",
+                "brand_id",
+                "aroma_id",
             ],
         ):
             if first:
@@ -1239,6 +1245,33 @@ class exporter(object):
                     else ""
                 ),
             )
+
+            if tmpl["line_id"]:
+                yield '<stringproperty name="line_id" value=%s/>' % (
+                    quoteattr(tmpl["line_id"][1]),
+                )
+            if tmpl["rubro_id"]:
+                yield '<stringproperty name="rubro_id" value=%s/>' % (
+                    quoteattr(tmpl["rubro_id"][1]),
+                )
+            if tmpl["subrubro_id"]:
+                yield '<stringproperty name="subrubro_id" value=%s/>' % (
+                    quoteattr(tmpl["subrubro_id"][1]),
+                )
+
+            if tmpl["presentation_id"]:
+                yield '<stringproperty name="presentation_id" value=%s/>' % (
+                    quoteattr(tmpl["presentation_id"][1]),
+                )
+            if tmpl["brand_id"]:
+                yield '<stringproperty name="brand_id" value=%s/>' % (
+                    quoteattr(tmpl["brand_id"][1]),
+                )
+            if tmpl["aroma_id"]:
+                yield '<stringproperty name="aroma_id" value=%s/>' % (
+                    quoteattr(tmpl["aroma_id"][1]),
+                )
+
             # Export suppliers for the item, if the item is allowed to be purchased
             if tmpl["purchase_ok"]:
                 suppliers = {}
