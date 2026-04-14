@@ -2144,7 +2144,7 @@ class exporter(object):
                 or j.get("commitment_date", False)
                 or j["date_order"]
             )
-            priority = 1  # We give all customer orders the same default priority
+            priority = 10  # We give all customer orders the same default priority
 
             # Possible sales order status are 'draft', 'sent', 'sale', 'done' and 'cancel'
 
