@@ -1061,6 +1061,12 @@ class exporter(object):
                 "route_ids",
                 "product_tag_ids",
                 "type",
+                "line_id",
+                "rubro_id",
+                "subrubro_id",
+                "presentation_id",
+                "brand_id",
+                "aroma_id",
             ]
             + (
                 [
@@ -1136,12 +1142,6 @@ class exporter(object):
                 "weight",
                 "product_template_attribute_value_ids",
                 "price_extra",
-                "line_id",
-                "rubro_id",
-                "subrubro_id",
-                "presentation_id",
-                "brand_id",
-                "aroma_id",
             ],
         ):
             if first:
