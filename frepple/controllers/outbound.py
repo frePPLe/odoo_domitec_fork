@@ -2990,7 +2990,7 @@ class exporter(object):
                                             if not sec.duration
                                             or wo.operation_id.time_cycle == 0
                                             else sec.duration
-                                            / wo.operation_idtime_cycle
+                                            / wo.operation_id.time_cycle
                                         ),
                                         quoteattr(sec.search_mode),
                                         quoteattr(
@@ -3201,11 +3201,18 @@ class exporter(object):
                     <calendar name=%s default="0"><buckets>
                     <bucket start="%s" end="2030-12-31T00:00:00" value="%s" days="127" priority="998" starttime="PT0M" endtime="PT1440M"/>
                     </buckets>
+                    %s
                     </calendar>\n
                     """ % (
                         (quoteattr("ROQ for %s" % (name,))),
                         self.currentdate.strftime("%Y-%m-%dT%H:%M:%S"),
                         ((i["product_max_qty"] - i["product_min_qty"]) * uom_factor),
+                        (
+                            '<doubleproperty name="roq_multiple_qty" value="%s"/>\n'
+                            % (i["qty_multiple"] * uom_factor)
+                            if i["qty_multiple"]
+                            else ""
+                        ),
                     )
             if not first:
                 yield "</calendars>\n"
