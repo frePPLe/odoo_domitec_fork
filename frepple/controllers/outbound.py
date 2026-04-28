@@ -1129,6 +1129,19 @@ class exporter(object):
             else:
                 itemsuppliers[i["product_tmpl_id"][0]] = [i]
 
+        sizeMultiples = {}
+        # Read the size multiples:
+        for i in self.generator.getData(
+            "stock.warehouse.orderpoint",
+            fields=[
+                "product_id",
+                "product_uom",
+                "qty_multiple",
+            ],
+            search=[("qty_multiple", ">", 1)],
+        ):
+            sizeMultiples[i["product_id"][0]] = i["qty_multiple"]
+
         # Read the products
         first = True
         for i in self.generator.getData(
@@ -1366,11 +1379,22 @@ class exporter(object):
                     for k, v in suppliers.items():
                         if v["date_end"] and v["date_end"] < self.currentdate:
                             continue
-                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" cost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
+                        yield '<itemsupplier leadtime="P%dD" priority="%s" batchwindow="P%dD" size_minimum="%f" %scost="%f"%s%s><supplier name=%s/></itemsupplier>\n' % (
                             v["delay"],
                             v["sequence"] or -1,
                             v["batching_window"] or 0,
                             v["min_qty"],
+                            (
+                                'size_multiple="%f" '
+                                % (
+                                    sizeMultiples.get(i["id"])
+                                    * self.convert_qty_uom(
+                                        1.0, tmpl["uom_id"], i["product_tmpl_id"][0]
+                                    ),
+                                )
+                                if sizeMultiples.get(i["id"])
+                                else ""
+                            ),
                             max(0, v["price"]),
                             (
                                 ' effective_end="%sT00:00:00"'
@@ -3160,7 +3184,6 @@ class exporter(object):
                     "product_min_qty",
                     "product_max_qty",
                     "product_uom",
-                    "qty_multiple",
                 ],
             ):
                 if first:
@@ -3201,18 +3224,11 @@ class exporter(object):
                     <calendar name=%s default="0"><buckets>
                     <bucket start="%s" end="2030-12-31T00:00:00" value="%s" days="127" priority="998" starttime="PT0M" endtime="PT1440M"/>
                     </buckets>
-                    %s
                     </calendar>\n
                     """ % (
                         (quoteattr("ROQ for %s" % (name,))),
                         self.currentdate.strftime("%Y-%m-%dT%H:%M:%S"),
                         ((i["product_max_qty"] - i["product_min_qty"]) * uom_factor),
-                        (
-                            '<doubleproperty name="roq_multiple_qty" value="%s"/>\n'
-                            % (i["qty_multiple"] * uom_factor)
-                            if i["qty_multiple"]
-                            else ""
-                        ),
                     )
             if not first:
                 yield "</calendars>\n"
