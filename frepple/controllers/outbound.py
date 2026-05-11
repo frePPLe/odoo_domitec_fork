@@ -1642,6 +1642,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
+                                "mrp_substitute_product_id",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1825,6 +1826,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
+                                "mrp_substitute_product_id",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1997,7 +1999,23 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
-                                    yield '<flow xsi:type="flow_start" quantity="-%f"><item name=%s/></flow>\n' % (
+                                    yield '<flow xsi:type="flow_start" priority="1" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                        (
+                                            (
+                                                "name=%s "
+                                                % (
+                                                    quoteattr(
+                                                        self.product_product[
+                                                            j["product_id"][0]
+                                                        ]["name"]
+                                                    ),
+                                                )
+                                            )
+                                            if j.get("mrp_substitute_product_id")
+                                            and j.get("mrp_substitute_product_id")[0]
+                                            in self.product_product
+                                            else ""
+                                        ),
                                         j["qty"] / producedQty,
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
@@ -2005,6 +2023,39 @@ class exporter(object):
                                             ]
                                         ),
                                     )
+                                    if (
+                                        j.get("mrp_substitute_product_id")
+                                        and j.get("mrp_substitute_product_id")[0]
+                                        in self.product_product
+                                    ):
+                                        yield '<flow xsi:type="flow_start" priority="2" %squantity="-%f"><item name=%s/></flow>\n' % (
+                                            (
+                                                (
+                                                    "name=%s "
+                                                    % (
+                                                        quoteattr(
+                                                            self.product_product[
+                                                                j["product_id"][0]
+                                                            ]["name"]
+                                                        ),
+                                                    )
+                                                )
+                                                if j.get("mrp_substitute_product_id")
+                                                and j.get("mrp_substitute_product_id")[
+                                                    0
+                                                ]
+                                                in self.product_product
+                                                else ""
+                                            ),
+                                            j["qty"] / producedQty,
+                                            quoteattr(
+                                                self.product_product[
+                                                    j.get("mrp_substitute_product_id")[
+                                                        0
+                                                    ]
+                                                ]["name"]
+                                            ),
+                                        )
                             if not first_flow:
                                 yield "</flows>\n"
                             yield "</operation></suboperation>\n"
@@ -3252,8 +3303,7 @@ class exporter(object):
         yield "<operationplans>\n"
         if isinstance(self.generator, Odoo_generator):
             # SQL query gives much better performance
-            self.generator.env.cr.execute(
-                """
+            self.generator.env.cr.execute("""
                 SELECT stock_quant.product_id,
                 stock_quant.location_id,
                 sum(stock_quant.quantity) as quantity,
@@ -3272,8 +3322,7 @@ class exporter(object):
                 stock_lot.name,
                 stock_lot.expiration_date
                 ORDER BY location_id ASC
-                """
-            )
+                """)
             data = self.generator.env.cr.fetchall()
         else:
             data = [
