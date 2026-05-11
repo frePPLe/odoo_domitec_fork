@@ -1973,7 +1973,10 @@ class exporter(object):
                                 counter * 10,
                                 (
                                     self.convert_float_time(
-                                        step["time_cycle"] / workcenter_qty / 1440.0
+                                        step["time_cycle"]
+                                        / workcenter_qty
+                                        / 1440.0
+                                        / i["product_qty"]
                                     )
                                     if step["time_cycle"] and step["time_cycle"] > 0
                                     else "P0D"
