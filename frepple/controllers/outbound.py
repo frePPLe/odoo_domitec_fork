@@ -1110,6 +1110,7 @@ class exporter(object):
             "product_tmpl_id",
             "partner_id",
             "delay",
+            "logistic_lt",
             "min_qty",
             "date_end",
             "date_start",
@@ -1304,8 +1305,15 @@ class exporter(object):
                                     and s["date_start"] == sup["date_start"]
                                 ):
                                     # Already found a record for this subcontractor
-                                    if sup["delay"] and sup["delay"] < s["delay"]:
-                                        s["delay"] = sup["delay"]
+                                    if (
+                                        sup["delay"]
+                                        or sup["logistic_lt"]
+                                        and (sup["delay"] or 0)
+                                        + (sup["logistic_lt"] or 0)
+                                        < s["delay"]
+                                    ):
+                                        s["delay"] = sup["delay"] or 0
+                                        +(sup["logistic_lt"] or 0)
                                     if (
                                         sup["sequence"]
                                         and sup["sequence"] < s["priority"]
@@ -1328,7 +1336,8 @@ class exporter(object):
                             tmpl["subcontractors"].append(
                                 {
                                     "name": name,
-                                    "delay": sup["delay"],
+                                    "delay": (sup["delay"] or 0)
+                                    + (sup["logistic_lt"] or 0),
                                     "priority": sup["sequence"] or -1,
                                     "size_minimum": sup["min_qty"],
                                     "date_start": sup["date_start"],
