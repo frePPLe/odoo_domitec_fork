@@ -1642,7 +1642,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
-                                "mrp_substitute_product_id",
+                                "substitute_1",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -1826,7 +1826,7 @@ class exporter(object):
                                 "product_id",
                                 "operation_id",
                                 "bom_product_template_attribute_value_ids",
-                                "mrp_substitute_product_id",
+                                "substitute_1",
                             ],
                         ):
                             # check if this BOM line applies to this variant
@@ -2011,8 +2011,8 @@ class exporter(object):
                                                     ),
                                                 )
                                             )
-                                            if j.get("mrp_substitute_product_id")
-                                            and j.get("mrp_substitute_product_id")[0]
+                                            if j.get("substitute_1")
+                                            and j.get("substitute_1")[0]
                                             in self.product_product
                                             else ""
                                         ),
@@ -2024,8 +2024,8 @@ class exporter(object):
                                         ),
                                     )
                                     if (
-                                        j.get("mrp_substitute_product_id")
-                                        and j.get("mrp_substitute_product_id")[0]
+                                        j.get("substitute_1")
+                                        and j.get("substitute_1")[0]
                                         in self.product_product
                                     ):
                                         yield '<flow xsi:type="flow_start" priority="2" %squantity="-%f"><item name=%s/></flow>\n' % (
@@ -2040,19 +2040,15 @@ class exporter(object):
                                                         ),
                                                     )
                                                 )
-                                                if j.get("mrp_substitute_product_id")
-                                                and j.get("mrp_substitute_product_id")[
-                                                    0
-                                                ]
+                                                if j.get("substitute_1")
+                                                and j.get("substitute_1")[0]
                                                 in self.product_product
                                                 else ""
                                             ),
                                             j["qty"] / producedQty,
                                             quoteattr(
                                                 self.product_product[
-                                                    j.get("mrp_substitute_product_id")[
-                                                        0
-                                                    ]
+                                                    j.get("substitute_1")[0]
                                                 ]["name"]
                                             ),
                                         )
