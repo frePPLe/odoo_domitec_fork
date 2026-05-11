@@ -1309,11 +1309,11 @@ class exporter(object):
                                         sup["delay"]
                                         or sup["logistic_lt"]
                                         and (sup["delay"] or 0)
-                                        + (sup["logistic_lt"] or 0)
+                                        + max(0, (sup["logistic_lt"] or 0))
                                         < s["delay"]
                                     ):
                                         s["delay"] = sup["delay"] or 0
-                                        +(sup["logistic_lt"] or 0)
+                                        +max(0, (sup["logistic_lt"] or 0))
                                     if (
                                         sup["sequence"]
                                         and sup["sequence"] < s["priority"]
@@ -1337,7 +1337,7 @@ class exporter(object):
                                 {
                                     "name": name,
                                     "delay": (sup["delay"] or 0)
-                                    + (sup["logistic_lt"] or 0),
+                                    + max(0, (sup["logistic_lt"] or 0)),
                                     "priority": sup["sequence"] or -1,
                                     "size_minimum": sup["min_qty"],
                                     "date_start": sup["date_start"],
@@ -1349,10 +1349,14 @@ class exporter(object):
                         # we pass a single record to frepple with lowest-lead-time,
                         # lowest-quantity, lowest-sequence, greatest-end-date.
                         r = suppliers[(name, sup["date_start"])]
-                        if sup["delay"] and (
-                            not r["delay"] or sup["delay"] < r["delay"]
+                        if (sup["delay"] or sup["logistic_lt"]) and (
+                            not r["delay"]
+                            or (sup["delay"] or 0) + max(0, (sup["logistic_lt"] or 0))
+                            < r["delay"]
                         ):
-                            r["delay"] = sup["delay"]
+                            r["delay"] = (sup["delay"] or 0) + max(
+                                0, (sup["logistic_lt"] or 0)
+                            )
                         if sup["sequence"] and (
                             not r["sequence"] or sup["sequence"] < r["sequence"]
                         ):
@@ -1376,7 +1380,8 @@ class exporter(object):
                             r["date_end"] = sup["date_end"]
                     else:
                         suppliers[(name, sup["date_start"])] = {
-                            "delay": sup["delay"],
+                            "delay": (sup["delay"] or 0)
+                            + max(0, (sup["logistic_lt"] or 0)),
                             "sequence": sup["sequence"] or -1,
                             "batching_window": sup["batching_window"] or 0,
                             "min_qty": sup["min_qty"],
