@@ -715,7 +715,7 @@ class importer(object):
                             # MO creation
                             group = elem.get("group", None)
                             if group:
-                                group = "frePPLe - %s" % remark
+                                group = "frePPLe - %s" % group
                             else:
                                 group = "frePPLe"
                             bom_id = int(elem.get("operation").rsplit(" ", 1)[1])
@@ -764,11 +764,11 @@ class importer(object):
                                 continue
                             if mo:
                                 new_qty = float(elem.get("quantity"))
-                                remark = elem.get("remark", None)
-                                if remark:
-                                    remark = "frePPLe - %s" % remark
+                                group = elem.get("group", None)
+                                if group:
+                                    group = "frePPLe - %s" % group
                                 else:
-                                    remark = "frePPLe"
+                                    group = "frePPLe"
                                 if mo.product_qty != new_qty:
                                     cpq = change_product_qty.create(
                                         {
@@ -780,7 +780,7 @@ class importer(object):
                                 arg_dict = {
                                     "date_start": elem.get("start"),
                                     "date_finished": elem.get("end"),
-                                    "origin": remark,
+                                    "origin": group,
                                 }
                                 # Odoo doesn't allow updating the start date of the MO if one WO is in progress
                                 if any(
