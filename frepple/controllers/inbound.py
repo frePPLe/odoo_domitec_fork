@@ -713,11 +713,11 @@ class importer(object):
                         )
                         if (elem.get("status") or "proposed") == "proposed":
                             # MO creation
-                            remark = elem.get("remark", None)
-                            if remark:
-                                remark = "frePPLe - %s" % remark
+                            group = elem.get("group", None)
+                            if group:
+                                group = "frePPLe - %s" % remark
                             else:
-                                remark = "frePPLe"
+                                group = "frePPLe"
                             bom_id = int(elem.get("operation").rsplit(" ", 1)[1])
                             try:
                                 bom = bom_type.search(
@@ -744,7 +744,7 @@ class importer(object):
                                     "qty_producing": 0.00,
                                     # TODO no place to store the criticality
                                     # elem.get('criticality'),
-                                    "origin": remark,
+                                    "origin": group,
                                 }
                             )
                             # Remember odoo name for the MO reference passed by frepple.
