@@ -736,7 +736,7 @@ class exporter(object):
                 i["id"],
                 (
                     ("<available name=%s/>" % quoteattr(self.calendar))
-                    if self.calendar and False # no available calendar
+                    if self.calendar and False  # no available calendar
                     else ""
                 ),
             )
@@ -1825,8 +1825,8 @@ class exporter(object):
                         )
                         if not producedQty:
                             producedQty = 1
-                        if producedQty != 1:
-                            yield "<size_minimum>%s</size_minimum>\n" % producedQty
+
+                        yield "<size_minimum>1</size_minimum>\n" % producedQty
 
                         yield "<suboperations>"
 
