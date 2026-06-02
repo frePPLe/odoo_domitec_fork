@@ -2013,7 +2013,10 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
-                                        yield f'<flow xsi:type="flow_end" priority="1" quantity="{producedQty}"><item name={quoteattr(product)}/></flow>\n'
+                                        yield '<flow xsi:type="flow_end" priority="1" quantity="%s"><item name=%s/></flow>\n' % (
+                                            producedQty,
+                                            quoteattr(product),
+                                        )
                                     yield '<flow xsi:type="flow_start" priority="1" %squantity="-%f"><item name=%s/></flow>\n' % (
                                         (
                                             (
