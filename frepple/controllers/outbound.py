@@ -1973,10 +1973,7 @@ class exporter(object):
                                 counter * 10,
                                 (
                                     self.convert_float_time(
-                                        step["time_cycle"]
-                                        / workcenter_qty
-                                        / 1440.0
-                                        / i["product_qty"]
+                                        step["time_cycle"] / workcenter_qty / 1440.0
                                     )
                                     if step["time_cycle"] and step["time_cycle"] > 0
                                     else "P0D"
@@ -2016,6 +2013,7 @@ class exporter(object):
                                     if first_flow:
                                         first_flow = False
                                         yield "<flows>\n"
+                                        yield f'<flow xsi:type="flow_end" priority="1" quantity="{producedQty}"><item name={quoteattr(product)}/></flow>\n'
                                     yield '<flow xsi:type="flow_start" priority="1" %squantity="-%f"><item name=%s/></flow>\n' % (
                                         (
                                             (
@@ -2033,7 +2031,7 @@ class exporter(object):
                                             in self.product_product
                                             else ""
                                         ),
-                                        j["qty"] / producedQty,
+                                        j["qty"],
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
@@ -2062,7 +2060,7 @@ class exporter(object):
                                                 in self.product_product
                                                 else ""
                                             ),
-                                            j["qty"] / producedQty,
+                                            j["qty"],
                                             quoteattr(
                                                 self.product_product[
                                                     j.get("substitute_1")[0]
