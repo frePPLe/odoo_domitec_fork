@@ -427,7 +427,7 @@ class exporter(object):
                 fields=["name", "login", "lang", "company_ids"],
             ):
                 if not self.singlecompany or self.company_id in usr["company_ids"]:
-                    users.append((usr["name"], usr["login"], usr["lang"]))
+                    users.append((usr["name"], usr["login"]))
         yield '<stringproperty name="users" value=%s/>\n' % quoteattr(json.dumps(users))
 
     def export_calendar(self):
