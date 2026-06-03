@@ -1824,7 +1824,9 @@ class exporter(object):
                                 i["product_tmpl_id"][0],
                             )
                             if multipleQty > 0:
-                                yield "<size_multiple>%s</size_multiple>\n" % multipleQty / producedQty
+                                yield "<size_multiple>%s</size_multiple>\n" % (
+                                    multipleQty / producedQty
+                                )
 
                         if producedQty > 1:
                             yield "<size_minimum>0</size_minimum>\n"
