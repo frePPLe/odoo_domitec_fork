@@ -1815,7 +1815,7 @@ class exporter(object):
                         )
                         if not producedQty:
                             producedQty = 1
-
+                        sizemultiple = ""
                         # Handle multiple quantity of a bom (frepple custom extra field)
                         if i.get("product_qty_multiple", 0) > 0:
                             multipleQty = self.convert_qty_uom(
@@ -1824,14 +1824,16 @@ class exporter(object):
                                 i["product_tmpl_id"][0],
                             )
                             if multipleQty > 0:
-                                yield "<size_multiple>%s</size_multiple>\n" % (
+                                sizemultiple = "<size_multiple>%s</size_multiple>\n" % (
                                     multipleQty / producedQty
                                 )
+                                yield sizemultiple
 
                         if producedQty > 1:
-                            yield "<size_minimum>0</size_minimum>\n"
+                            sizeminimum = "<size_minimum>0</size_minimum>\n"
                         else:
-                            yield "<size_minimum>1</size_minimum>\n"
+                            sizeminimum = "<size_minimum>1</size_minimum>\n"
+                        yield sizeminimum
 
                         yield "<suboperations>"
 
@@ -2006,6 +2008,8 @@ class exporter(object):
                                 ),
                                 secondary_workcenter_str,
                             )
+                            yield sizemultiple
+                            yield sizeminimum
                             first_flow = True
                             for j in fl.values():
                                 if j["qty"] > 0 and (
