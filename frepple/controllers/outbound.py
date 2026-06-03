@@ -1807,6 +1807,15 @@ class exporter(object):
                             quoteattr(location),
                         )
 
+                        # Handle produced quantity of a bom
+                        producedQty = (
+                            i["product_qty"]
+                            * getattr(i, "product_efficiency", 1.0)
+                            * uom_factor
+                        )
+                        if not producedQty:
+                            producedQty = 1
+
                         # Handle multiple quantity of a bom (frepple custom extra field)
                         if i.get("product_qty_multiple", 0) > 0:
                             multipleQty = self.convert_qty_uom(
@@ -1819,17 +1828,8 @@ class exporter(object):
 
                         if producedQty > 1:
                             yield "<size_minimum>0</size_minimum>\n"
-
-                        # Handle produced quantity of a bom
-                        producedQty = (
-                            i["product_qty"]
-                            * getattr(i, "product_efficiency", 1.0)
-                            * uom_factor
-                        )
-                        if not producedQty:
-                            producedQty = 1
-
-                        yield "<size_minimum>1</size_minimum>\n"
+                        else:
+                            yield "<size_minimum>1</size_minimum>\n"
 
                         yield "<suboperations>"
 
