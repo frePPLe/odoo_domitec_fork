@@ -1067,6 +1067,10 @@ class exporter(object):
                 "presentation_id",
                 "brand_id",
                 "aroma_id",
+                "workgroup_id",
+                "sequence_nbr",
+                "total_consumption",
+                "product_type_operation",
             ]
             + (
                 [
