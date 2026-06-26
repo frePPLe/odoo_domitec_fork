@@ -746,8 +746,7 @@ class importer(object):
                                     "product_id": int(item_id),
                                     "company_id": self.company.id,
                                     "product_uom_id": int(uom_id),
-                                    "picking_type_id": product_type_operation
-                                    or picking.id,
+                                    "picking_type_id": picking.id,
                                     "bom_id": bom_id,
                                     "qty_producing": 0.00,
                                     # TODO no place to store the criticality
