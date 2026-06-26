@@ -722,6 +722,8 @@ class importer(object):
                             product_type_operation = elem.get(
                                 "product_type_operation", None
                             )
+                            if product_type_operation:
+                                product_type_operation = int(product_type_operation)
 
                             bom_id = int(elem.get("operation").rsplit(" ", 1)[1])
                             try:
