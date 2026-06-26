@@ -1264,6 +1264,23 @@ class exporter(object):
                 ),
             )
 
+            if tmpl.get("workgroup_id"):
+                yield '<stringproperty name="workgroup_id" value=%s/>' % (
+                    quoteattr(tmpl["workgroup_id"][1])
+                )
+            if tmpl.get("sequence_nbr"):
+                yield '<stringproperty name="sequence_nbr" value=%s/>' % (
+                    quoteattr(f"{tmpl["sequence_nbr"]:06d}")
+                )
+            if tmpl.get("total_consumption"):
+                yield '<booleanproperty name="total_consumption" value="%s"/>' % (
+                    1 if tmpl["total_consumption"] else 0
+                )
+            if tmpl.get("product_type_operation"):
+                yield '<stringproperty name="product_type_operation" value=%s/>' % (
+                    quoteattr(tmpl["product_type_operation"][0])
+                )
+
             if tmpl["line_id"]:
                 yield '<stringproperty name="line_id" value=%s/>' % (
                     quoteattr(tmpl["line_id"][1]),
