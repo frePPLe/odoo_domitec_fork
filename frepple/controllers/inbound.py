@@ -719,11 +719,11 @@ class importer(object):
                             else:
                                 group = "frePPLe"
 
-                            # product_type_operation = elem.get(
-                            #     "product_type_operation", None
-                            # )
-                            # if product_type_operation:
-                            #     product_type_operation = int(product_type_operation)
+                            product_type_operation = elem.get(
+                                "product_type_operation", None
+                            )
+                            if product_type_operation:
+                                product_type_operation = int(product_type_operation)
 
                             bom_id = int(elem.get("operation").rsplit(" ", 1)[1])
                             try:
@@ -746,7 +746,8 @@ class importer(object):
                                     "product_id": int(item_id),
                                     "company_id": self.company.id,
                                     "product_uom_id": int(uom_id),
-                                    "picking_type_id": picking.id,
+                                    "picking_type_id": product_type_operation
+                                    or picking.id,
                                     "bom_id": bom_id,
                                     "qty_producing": 0.00,
                                     # TODO no place to store the criticality
