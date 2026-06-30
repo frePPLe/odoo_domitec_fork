@@ -2005,7 +2005,22 @@ class exporter(object):
                                     else ""
                                 ),
                                 counter * 10,
-                                self.map_setup_time.get(step["workcenter_id"], 0) * 60,
+                                (
+                                    self.convert_float_time(
+                                        self.map_setup_time.get(
+                                            step["workcenter_id"], 0
+                                        ),
+                                        "minutes",
+                                    )
+                                    if self.convert_float_time(
+                                        self.map_setup_time.get(
+                                            step["workcenter_id"], 0
+                                        ),
+                                        "minutes",
+                                    )
+                                    > 0
+                                    else "P0D"
+                                ),
                                 (
                                     self.convert_float_time(
                                         step["time_cycle"] / workcenter_qty / 1440.0
