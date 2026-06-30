@@ -906,6 +906,7 @@ class exporter(object):
         company.mfg_location -> resource.location
         """
         self.map_workcenters = {}
+        self.map_setup_time = {}
         first = True
         for i in self.generator.getData(
             "mrp.workcenter",
@@ -919,6 +920,8 @@ class exporter(object):
                 "tool",
                 "post_operation_time",
                 "constrained",
+                "time_start",
+                "time_stop",
             ],
         ):
             if first:
@@ -944,6 +947,9 @@ class exporter(object):
                 )
             )
             self.map_workcenters[i["id"]] = i
+            self.map_setup_time[i["id"]] = (i["time_start"] or 0) + (
+                i["time_stop"] or 0
+            )
             yield '<resource name=%s maximum="%s" category="%s" subcategory="%s" constrained="%s" efficiency="%s"><location name=%s/>%s%s</resource>\n' % (
                 quoteattr(name),
                 i["default_capacity"],
@@ -1991,7 +1997,7 @@ class exporter(object):
                                     step["workcenter_id"][0]
                                 ].get("post_operation_time", 0)
 
-                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration_per="%s" category=%s posttime="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>\n' % (
+                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration="%s" duration_per="%s" category=%s posttime="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>\n' % (
                                 quoteattr(name),
                                 (
                                     ("description=%s " % quoteattr(i["code"]))
@@ -1999,6 +2005,7 @@ class exporter(object):
                                     else ""
                                 ),
                                 counter * 10,
+                                self.map_setup_time.get(step["workcenter_id"], 0) * 60,
                                 (
                                     self.convert_float_time(
                                         step["time_cycle"] / workcenter_qty / 1440.0
