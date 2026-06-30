@@ -2012,12 +2012,7 @@ class exporter(object):
                                         ),
                                         "minutes",
                                     )
-                                    if self.convert_float_time(
-                                        self.map_setup_time.get(
-                                            step["workcenter_id"], 0
-                                        ),
-                                        "minutes",
-                                    )
+                                    if self.map_setup_time.get(step["workcenter_id"], 0)
                                     > 0
                                     else "P0D"
                                 ),
