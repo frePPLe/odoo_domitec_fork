@@ -3333,7 +3333,7 @@ class exporter(object):
                         self.currentdate.strftime("%Y-%m-%dT%H:%M:%S"),
                         (i["product_min_qty"] * uom_factor),
                     )
-                if i["product_max_qty"] - i["product_min_qty"] > 0:
+                if False and i["product_max_qty"] - i["product_min_qty"] > 0:
                     yield """
                     <calendar name=%s default="0"><buckets>
                     <bucket start="%s" end="2030-12-31T00:00:00" value="%s" days="127" priority="998" starttime="PT0M" endtime="PT1440M"/>
