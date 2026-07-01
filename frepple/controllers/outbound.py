@@ -2153,7 +2153,10 @@ class exporter(object):
         """
         # Get all sales order lines
         search = (
-            [("product_id", "!=", False)]
+            [
+                ("product_id", "!=", False),
+                ("order_id.state", "=", "sale"),
+            ]
             if self.delta >= 999
             else [
                 ("product_id", "!=", False),
