@@ -1989,7 +1989,9 @@ class exporter(object):
                                         ),
                                         "minutes",
                                     )
-                                    if self.map_setup_time.get(step["workcenter_id"], 0)
+                                    if self.map_setup_time.get(
+                                        step["workcenter_id"][0], 0
+                                    )
                                     > 0
                                     else "P0D"
                                 ),
