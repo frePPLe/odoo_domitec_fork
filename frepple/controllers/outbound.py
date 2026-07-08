@@ -397,15 +397,27 @@ class exporter(object):
 
     def convert_float_time(self, float_time, units="days"):
         """
-        Convert Odoo float time to ISO 8601 duration.
+        Convert Odoo float time to ISO 8601 duration, including milliseconds.
         """
         d = timedelta(**{units: float_time})
-        return "P%dDT%dH%dM%dS" % (
-            d.days,  # duration: days
-            int(d.seconds / 3600),  # duration: hours
-            int((d.seconds % 3600) / 60),  # duration: minutes
-            int(d.seconds % 60),  # duration: seconds
+
+        # Calculate regular hours, minutes, and whole seconds from d.seconds
+        hours = int(d.seconds // 3600)
+        minutes = int((d.seconds % 3600) // 60)
+
+        # Combine remaining seconds and microseconds into a single float
+        seconds_float = (d.seconds % 60) + (d.microseconds / 1_000_000)
+
+        # Format seconds: %g removes trailing zeros, or use %.3f for strict 3-decimal precision
+        # Example using %.3f: "P%dDT%dH%dM%.3fS"
+        # Stripping trailing zeros if they aren't needed makes it cleaner:
+        seconds_str = (
+            ("%.3f" % seconds_float).rstrip("0").rstrip(".")
+            if d.microseconds
+            else "%d" % seconds_float
         )
+
+        return "P%dDT%dH%dM%sS" % (d.days, hours, minutes, seconds_str)
 
     def formatDateTime(self, d, tmzone=None):
         if not isinstance(d, datetime):
@@ -1811,15 +1823,6 @@ class exporter(object):
                             quoteattr(location),
                         )
 
-                        # Handle produced quantity of a bom
-                        producedQty = (
-                            i["product_qty"]
-                            * getattr(i, "product_efficiency", 1.0)
-                            * uom_factor
-                        )
-                        if not producedQty:
-                            producedQty = 1
-                        sizemultiple = ""
                         # Handle multiple quantity of a bom (frepple custom extra field)
                         if i.get("product_qty_multiple", 0) > 0:
                             multipleQty = self.convert_qty_uom(
@@ -1828,16 +1831,18 @@ class exporter(object):
                                 i["product_tmpl_id"][0],
                             )
                             if multipleQty > 0:
-                                sizemultiple = "<size_multiple>%s</size_multiple>\n" % (
-                                    multipleQty / producedQty
-                                )
-                                yield sizemultiple
+                                yield "<size_multiple>%s</size_multiple>\n" % multipleQty
 
-                        if producedQty > 1:
-                            sizeminimum = "<size_minimum>0</size_minimum>\n"
-                        else:
-                            sizeminimum = "<size_minimum>1</size_minimum>\n"
-                        yield sizeminimum
+                        # Handle produced quantity of a bom
+                        producedQty = (
+                            i["product_qty"]
+                            * getattr(i, "product_efficiency", 1.0)
+                            * uom_factor
+                        )
+                        if not producedQty:
+                            producedQty = 1
+                        if producedQty != 1:
+                            yield "<size_minimum>%s</size_minimum>\n" % producedQty
 
                         yield "<suboperations>"
 
@@ -1997,7 +2002,10 @@ class exporter(object):
                                 ),
                                 (
                                     self.convert_float_time(
-                                        step["time_cycle"] / workcenter_qty / 1440.0
+                                        step["time_cycle"]
+                                        / workcenter_qty
+                                        / 1440.0
+                                        / producedQty
                                     )
                                     if step["time_cycle"] and step["time_cycle"] > 0
                                     else "P0D"
@@ -2025,8 +2033,6 @@ class exporter(object):
                                 ),
                                 secondary_workcenter_str,
                             )
-                            yield sizemultiple
-                            yield sizeminimum
                             first_flow = True
                             for j in fl.values():
                                 if j["qty"] > 0 and (
