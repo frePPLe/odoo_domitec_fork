@@ -1613,9 +1613,8 @@ class exporter(object):
                                 quoteattr(location),
                             )
                         else:
-                            duration = (i["produce_delay"] or 0) + (
-                                i["days_to_prepare_mo"] or 0
-                            )
+                            # No duration for the BOM without operations
+                            duration = 0
 
                             yield '<operation name=%s %ssize_multiple="1" duration="%s" posttime="P%dD" priority="%s" category=%s xsi:type="operation_fixed_time">\n' "<item name=%s/><location name=%s/>\n" % (
                                 quoteattr(operation),
