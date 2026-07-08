@@ -2062,7 +2062,7 @@ class exporter(object):
                                             in self.product_product
                                             else ""
                                         ),
-                                        j["qty"],
+                                        j["qty"] / producedQty,
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
@@ -2091,7 +2091,7 @@ class exporter(object):
                                                 in self.product_product
                                                 else ""
                                             ),
-                                            j["qty"],
+                                            j["qty"] / producedQty,
                                             quoteattr(
                                                 self.product_product[
                                                     j.get("substitute_1")[0]
@@ -2099,8 +2099,7 @@ class exporter(object):
                                             ),
                                         )
                             if not first_flow:
-                                yield '<flow xsi:type="flow_end" priority="1" quantity="%s"><item name=%s/></flow>\n' % (
-                                    producedQty,
+                                yield '<flow xsi:type="flow_end" priority="1" quantity="1"><item name=%s/></flow>\n' % (
                                     quoteattr(product_buf["name"]),
                                 )
                                 yield "</flows>\n"
