@@ -2146,7 +2146,7 @@ class exporter(object):
                     datetime.now() - timedelta(days=self.delta),
                 ),
                 ("order_id.state", "=", "sale"),
-                ("order_id.partner_id.industry_id.name", "!=", "SUSPENDIDO"),
+                ("order_id.partner_id.industry_id.id", "!=", 22),
             ]
         )
         so_line = self.generator.getData(
