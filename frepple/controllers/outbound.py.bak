@@ -397,27 +397,15 @@ class exporter(object):
 
     def convert_float_time(self, float_time, units="days"):
         """
-        Convert Odoo float time to ISO 8601 duration, including milliseconds.
+        Convert Odoo float time to ISO 8601 duration.
         """
         d = timedelta(**{units: float_time})
-
-        # Calculate regular hours, minutes, and whole seconds from d.seconds
-        hours = int(d.seconds // 3600)
-        minutes = int((d.seconds % 3600) // 60)
-
-        # Combine remaining seconds and microseconds into a single float
-        seconds_float = (d.seconds % 60) + (d.microseconds / 1_000_000)
-
-        # Format seconds: %g removes trailing zeros, or use %.3f for strict 3-decimal precision
-        # Example using %.3f: "P%dDT%dH%dM%.3fS"
-        # Stripping trailing zeros if they aren't needed makes it cleaner:
-        seconds_str = (
-            ("%.3f" % seconds_float).rstrip("0").rstrip(".")
-            if d.microseconds
-            else "%d" % seconds_float
+        return "P%dDT%dH%dM%dS" % (
+            d.days,  # duration: days
+            int(d.seconds / 3600),  # duration: hours
+            int((d.seconds % 3600) / 60),  # duration: minutes
+            int(d.seconds % 60),  # duration: seconds
         )
-
-        return "P%dDT%dH%dM%sS" % (d.days, hours, minutes, seconds_str)
 
     def formatDateTime(self, d, tmzone=None):
         if not isinstance(d, datetime):
@@ -1613,8 +1601,9 @@ class exporter(object):
                                 quoteattr(location),
                             )
                         else:
-                            # No duration for the BOM without operations
-                            duration = 0
+                            duration = (i["produce_delay"] or 0) + (
+                                i["days_to_prepare_mo"] or 0
+                            )
 
                             yield '<operation name=%s %ssize_multiple="1" duration="%s" posttime="P%dD" priority="%s" category=%s xsi:type="operation_fixed_time">\n' "<item name=%s/><location name=%s/>\n" % (
                                 quoteattr(operation),
@@ -1653,6 +1642,8 @@ class exporter(object):
                         )
                         if not producedQty:
                             producedQty = 1
+                        if producedQty != 1 and not subcontractor:
+                            yield "<size_minimum>%s</size_minimum>\n" % producedQty
                         yield "<flows>\n"
 
                         # Build consuming flows.
@@ -1838,6 +1829,8 @@ class exporter(object):
                         )
                         if not producedQty:
                             producedQty = 1
+                        if producedQty != 1:
+                            yield "<size_minimum>%s</size_minimum>\n" % producedQty
 
                         yield "<suboperations>"
 
@@ -1997,10 +1990,7 @@ class exporter(object):
                                 ),
                                 (
                                     self.convert_float_time(
-                                        step["time_cycle"]
-                                        / workcenter_qty
-                                        / 1440.0
-                                        / producedQty
+                                        step["time_cycle"] / workcenter_qty / 1440.0
                                     )
                                     if step["time_cycle"] and step["time_cycle"] > 0
                                     else "P0D"
@@ -2027,7 +2017,7 @@ class exporter(object):
                                     else ""
                                 ),
                                 secondary_workcenter_str,
-                            )
+                            )                      
                             first_flow = True
                             for j in fl.values():
                                 if j["qty"] > 0 and (
@@ -2057,7 +2047,7 @@ class exporter(object):
                                             in self.product_product
                                             else ""
                                         ),
-                                        j["qty"] / producedQty,
+                                        j["qty"],
                                         quoteattr(
                                             self.product_product[j["product_id"][0]][
                                                 "name"
@@ -2086,7 +2076,7 @@ class exporter(object):
                                                 in self.product_product
                                                 else ""
                                             ),
-                                            j["qty"] / producedQty,
+                                            j["qty"],
                                             quoteattr(
                                                 self.product_product[
                                                     j.get("substitute_1")[0]
@@ -2094,7 +2084,8 @@ class exporter(object):
                                             ),
                                         )
                             if not first_flow:
-                                yield '<flow xsi:type="flow_end" priority="1" quantity="1"><item name=%s/></flow>\n' % (
+                                yield '<flow xsi:type="flow_end" priority="1" quantity="%s"><item name=%s/></flow>\n' % (
+                                    producedQty,
                                     quoteattr(product_buf["name"]),
                                 )
                                 yield "</flows>\n"
@@ -2133,19 +2124,11 @@ class exporter(object):
         # Get all sales order lines
         search = (
             [
-                "&",
-                "&",
                 ("product_id", "!=", False),
                 ("order_id.state", "=", "sale"),
-                "|",
-                ("order_id.partner_id.industry_id", "=", False),
-                ("order_id.partner_id.industry_id.id", "!=", 22),
             ]
             if self.delta >= 999
             else [
-                "&",
-                "&",
-                "&",
                 ("product_id", "!=", False),
                 (
                     "write_date",
@@ -2153,9 +2136,6 @@ class exporter(object):
                     datetime.now() - timedelta(days=self.delta),
                 ),
                 ("order_id.state", "=", "sale"),
-                "|",
-                ("order_id.partner_id.industry_id", "=", False),
-                ("order_id.partner_id.industry_id.id", "!=", 22),
             ]
         )
         so_line = self.generator.getData(
