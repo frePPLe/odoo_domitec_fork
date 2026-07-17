@@ -2135,6 +2135,7 @@ class exporter(object):
             [
                 ("product_id", "!=", False),
                 ("order_id.state", "=", "sale"),
+                ("order_id.partner_id.industry_id.name", "!=", "SUSPENDIDO"),
             ]
             if self.delta >= 999
             else [
@@ -2145,6 +2146,7 @@ class exporter(object):
                     datetime.now() - timedelta(days=self.delta),
                 ),
                 ("order_id.state", "=", "sale"),
+                ("order_id.partner_id.industry_id.name", "!=", "SUSPENDIDO"),
             ]
         )
         so_line = self.generator.getData(
