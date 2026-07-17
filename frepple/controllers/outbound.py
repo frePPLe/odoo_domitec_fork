@@ -2139,7 +2139,7 @@ class exporter(object):
                 ("order_id.state", "=", "sale"),
                 "|",
                 ("order_id.partner_id.industry_id", "=", False),
-                ("order_id.partner_id.industry_id.id", "!=", 22),
+                ("order_id.partner_id.industry_id.name", "!=", "SUSPENDIDO"),
             ]
             if self.delta >= 999
             else [
@@ -2155,7 +2155,7 @@ class exporter(object):
                 ("order_id.state", "=", "sale"),
                 "|",
                 ("order_id.partner_id.industry_id", "=", False),
-                ("order_id.partner_id.industry_id.id", "!=", 22),
+                ("order_id.partner_id.industry_id.name", "!=", "SUSPENDIDO"),
             ]
         )
         so_line = self.generator.getData(
