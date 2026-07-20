@@ -759,6 +759,10 @@ class importer(object):
                             mo._create_update_move_finished()
                             # mo.action_confirm()  # confirm MO
                             create = True
+
+                            for wo in mo.workorder_ids:
+                                wo.duration_expected = float(elem.get("duration_per"))
+                                break
                         else:
                             # MO update
                             create = False
