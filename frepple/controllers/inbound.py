@@ -769,23 +769,25 @@ class importer(object):
                                     continue
                             except Exception:
                                 pass
-                            mo = mfg_order.with_context(context).create(
-                                {
-                                    "product_qty": elem.get("quantity"),
-                                    "date_start": elem.get("start"),
-                                    "date_finished": elem.get("end"),
-                                    "product_id": int(item_id),
-                                    "company_id": self.company.id,
-                                    "product_uom_id": int(uom_id),
-                                    "picking_type_id": product_type_operation
-                                    or picking.id,
-                                    "bom_id": bom_id,
-                                    "qty_producing": 0.00,
-                                    # TODO no place to store the criticality
-                                    # elem.get('criticality'),
-                                    "origin": group,
-                                }
+
+                            d0 = {
+                                "product_qty": elem.get("quantity"),
+                                "date_start": elem.get("start"),
+                                "date_finished": elem.get("end"),
+                                "product_id": int(item_id),
+                                "company_id": self.company.id,
+                                "product_uom_id": int(uom_id),
+                                "picking_type_id": product_type_operation or picking.id,
+                                "bom_id": bom_id,
+                                "qty_producing": 0.00,
+                                # TODO no place to store the criticality
+                                # elem.get('criticality'),
+                                "origin": group,
+                            }
+                            logger.error(
+                                f"about to create a MO with these values: {d0}"
                             )
+                            mo = mfg_order.with_context(context).create(d0)
                             countmfg_created += 1
                             # Remember odoo name for the MO reference passed by frepple.
                             # This mapping is later used when importing WO.
