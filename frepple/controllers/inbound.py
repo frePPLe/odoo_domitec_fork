@@ -746,6 +746,16 @@ class importer(object):
                         )
                         if (elem.get("status") or "proposed") == "proposed":
                             # MO creation
+                            group = elem.get("group", None)
+                            if group:
+                                group = "frePPLe - %s" % group
+                            else:
+                                group = "frePPLe"
+                            product_type_operation = elem.get(
+                                "product_type_operation", None
+                            )
+                            if product_type_operation:
+                                product_type_operation = int(product_type_operation)
                             remark = elem.get("remark", None)
                             if remark:
                                 remark = "frePPLe - %s" % remark
@@ -772,12 +782,13 @@ class importer(object):
                                     "product_id": int(item_id),
                                     "company_id": self.company.id,
                                     "product_uom_id": int(uom_id),
-                                    "picking_type_id": picking.id,
+                                    "picking_type_id": product_type_operation
+                                    or picking.id,
                                     "bom_id": bom_id,
                                     "qty_producing": 0.00,
                                     # TODO no place to store the criticality
                                     # elem.get('criticality'),
-                                    "origin": remark,
+                                    "origin": group,
                                 }
                             )
                             countmfg_created += 1
@@ -787,6 +798,13 @@ class importer(object):
                             mo._create_update_move_finished()
                             # mo.action_confirm()  # confirm MO
                             create = True
+
+                            for wo in mo.workorder_ids:
+                                wo.duration_expected = float(
+                                    elem.get("duration_per")
+                                ) * float(elem.get("quantity"))
+                                break
+
                         else:
                             # MO update
                             create = False
