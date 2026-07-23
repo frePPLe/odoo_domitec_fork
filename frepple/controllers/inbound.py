@@ -755,7 +755,7 @@ class importer(object):
                             # Remember odoo name for the MO reference passed by frepple.
                             # This mapping is later used when importing WO.
                             mo_references[elem.get("reference")] = mo
-                            mo._create_update_move_finished()
+                            # mo._create_update_move_finished()
                             # mo.action_confirm()  # confirm MO
                             create = True
 
