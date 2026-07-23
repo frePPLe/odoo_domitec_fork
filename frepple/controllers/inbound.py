@@ -23,6 +23,7 @@
 #
 
 import odoo
+import json
 import logging
 from xml.etree.cElementTree import iterparse
 from datetime import datetime
@@ -188,7 +189,8 @@ class importer(object):
 
         # Parsing the XML data file
         countproc = 0
-        countmfg = 0
+        countmfg_created = 0
+        countmfg_updated = 0
 
         # dictionary that stores as key the supplier id and the associated po id
         # this dict is used to aggregate the exported POs for a same supplier
@@ -376,8 +378,12 @@ class importer(object):
                                 "min_planned": date_planned,
                                 "min_ordered": date_ordered,
                                 "po": po,
+                                "frepple_references": [elem.get("id")],
                             }
                         else:
+                            supplier_reference[supplier_id][
+                                "frepple_references"
+                            ].append(elem.get("id"))
                             if (
                                 date_planned
                                 < supplier_reference[supplier_id]["min_planned"]
@@ -395,19 +401,37 @@ class importer(object):
 
                         if (item_id, supplier_id) not in product_supplier_dict:
                             product = product_product.browse(int(item_id))
+                            # look first for a record for that specific variant/product
                             supplier = product_supplierinfo.search(
                                 [
+                                    "&",
                                     ("partner_id", "=", supplier_id),
                                     (
-                                        "product_tmpl_id",
+                                        "product_id",
                                         "=",
-                                        product.product_tmpl_id.id,
+                                        product.id,
                                     ),
                                     ("min_qty", "<=", quantity),
                                 ],
                                 limit=1,
                                 order="min_qty desc",
                             )
+                            # if no record found then move at template level
+                            if not supplier:
+                                supplier = product_supplierinfo.search(
+                                    [
+                                        "&",
+                                        ("partner_id", "=", supplier_id),
+                                        (
+                                            "product_tmpl_id",
+                                            "=",
+                                            product.product_tmpl_id.id,
+                                        ),
+                                        ("min_qty", "<=", quantity),
+                                    ],
+                                    limit=1,
+                                    order="min_qty desc",
+                                )
                             product_uom = uom_uom.browse(int(uom_id))
                             # first create a minimal PO line
                             po_line = proc_orderline.create(
@@ -419,6 +443,15 @@ class importer(object):
                                 }
                             )
                             po = po_line.order_id
+                            # set the PO currency.
+                            # By default Odoo sets the company currency for the PO currency
+                            # which can be different from the vendor currency
+                            if (
+                                supplier
+                                and supplier.currency_id
+                                and supplier.currency_id.id != po.currency_id.id
+                            ):
+                                po.currency_id = supplier.currency_id.id
 
                             # Is there a blanket order for this product /supplier ?
                             if (
@@ -713,16 +746,11 @@ class importer(object):
                         )
                         if (elem.get("status") or "proposed") == "proposed":
                             # MO creation
-                            group = elem.get("group", None)
-                            if group:
-                                group = "frePPLe - %s" % group
+                            remark = elem.get("remark", None)
+                            if remark:
+                                remark = "frePPLe - %s" % remark
                             else:
-                                group = "frePPLe"
-                            product_type_operation = elem.get(
-                                "product_type_operation", None
-                            )
-                            if product_type_operation:
-                                product_type_operation = int(product_type_operation)
+                                remark = "frePPLe"
                             bom_id = int(elem.get("operation").rsplit(" ", 1)[1])
                             try:
                                 bom = bom_type.search(
@@ -736,34 +764,29 @@ class importer(object):
                                     continue
                             except Exception:
                                 pass
-                            d0 = {
-                                "product_qty": elem.get("quantity"),
-                                "date_start": elem.get("start"),
-                                "date_finished": elem.get("end"),
-                                "product_id": int(item_id),
-                                "company_id": self.company.id,
-                                "product_uom_id": int(uom_id),
-                                "picking_type_id": product_type_operation or picking.id,
-                                "bom_id": bom_id,
-                                "qty_producing": 0.00,
-                                # TODO no place to store the criticality
-                                # elem.get('criticality'),
-                                "origin": group,
-                            }
-                            logger.error(f"about to create MO with values {d0}")
-                            mo = mfg_order.with_context(context).create(d0)
+                            mo = mfg_order.with_context(context).create(
+                                {
+                                    "product_qty": elem.get("quantity"),
+                                    "date_start": elem.get("start"),
+                                    "date_finished": elem.get("end"),
+                                    "product_id": int(item_id),
+                                    "company_id": self.company.id,
+                                    "product_uom_id": int(uom_id),
+                                    "picking_type_id": picking.id,
+                                    "bom_id": bom_id,
+                                    "qty_producing": 0.00,
+                                    # TODO no place to store the criticality
+                                    # elem.get('criticality'),
+                                    "origin": remark,
+                                }
+                            )
+                            countmfg_created += 1
                             # Remember odoo name for the MO reference passed by frepple.
                             # This mapping is later used when importing WO.
                             mo_references[elem.get("reference")] = mo
-                            # mo._create_update_move_finished()
+                            mo._create_update_move_finished()
                             # mo.action_confirm()  # confirm MO
                             create = True
-
-                            for wo in mo.workorder_ids:
-                                wo.duration_expected = float(
-                                    elem.get("duration_per")
-                                ) * float(elem.get("quantity"))
-                                break
                         else:
                             # MO update
                             create = False
@@ -773,13 +796,14 @@ class importer(object):
                                 )
                             except Exception:
                                 continue
+                            countmfg_updated += 1
                             if mo:
                                 new_qty = float(elem.get("quantity"))
-                                group = elem.get("group", None)
-                                if group:
-                                    group = "frePPLe - %s" % group
+                                remark = elem.get("remark", None)
+                                if remark:
+                                    remark = "frePPLe - %s" % remark
                                 else:
-                                    group = "frePPLe"
+                                    remark = "frePPLe"
                                 if mo.product_qty != new_qty:
                                     cpq = change_product_qty.create(
                                         {
@@ -791,7 +815,7 @@ class importer(object):
                                 arg_dict = {
                                     "date_start": elem.get("start"),
                                     "date_finished": elem.get("end"),
-                                    "origin": group,
+                                    "origin": remark,
                                 }
                                 # Odoo doesn't allow updating the start date of the MO if one WO is in progress
                                 if any(
@@ -887,7 +911,6 @@ class importer(object):
                                                             )
                                                             break
 
-                        countmfg += 1
                 except Exception as e:
                     import traceback
 
@@ -938,7 +961,37 @@ class importer(object):
             if sup["min_ordered"]:
                 sup["po"].date_order = sup["min_ordered"]
 
+        # Collect created PO/MO references
+        created_pos = [
+            {
+                "reference": sup["po"].name,
+                "id": sup["id"],
+                "frepple_references": sup["frepple_references"],
+            }
+            for sup in supplier_reference.values()
+        ]
+        created_mos = [
+            {"reference": mo.name, "id": mo.id, "frepple_reference": frepple_ref}
+            for frepple_ref, mo in mo_references.items()
+        ]
+
         # Be polite, and reply to the post
-        msg.append("Processed %s uploaded procurement orders" % countproc)
-        msg.append("Processed %s uploaded manufacturing orders" % countmfg)
-        return "\n".join(msg)
+        if countmfg_created:
+            msg.append(
+                "Created %d manufacturing orders%s"
+                % (countmfg_created, "\n" if countmfg_updated or created_pos else "")
+            )
+        if countmfg_updated:
+            msg.append(
+                "Updated %d manufacturing orders%s"
+                % (countmfg_updated, "\n" if created_pos else "")
+            )
+        if created_pos:
+            msg.append("Created %d purchase orders" % (len(created_pos),))
+        return json.dumps(
+            {
+                "messages": msg,
+                "created_purchase_orders": created_pos,
+                "created_manufacturing_orders": created_mos,
+            }
+        )
