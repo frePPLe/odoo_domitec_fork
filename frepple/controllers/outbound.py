@@ -3323,7 +3323,9 @@ class exporter(object):
                     </calendar>\n
                     """ % (
                         (quoteattr("SS for %s" % (name,))),
-                        self.currentdate.strftime("%Y-%m-%dT%H:%M:%S"),
+                        (self.currentdate - timedelta(days=7)).strftime(
+                            "%Y-%m-%dT%H:%M:%S"
+                        ),
                         (i["product_min_qty"] * uom_factor),
                     )
                 if False and i["product_max_qty"] - i["product_min_qty"] > 0:
