@@ -26,9 +26,8 @@ import json
 import logging
 import pytz
 from xml.sax.saxutils import quoteattr
-from datetime import datetime, timedelta, date, time
+from datetime import datetime, timedelta, date, time, timezone
 from zoneinfo import ZoneInfo
-from pytz import timezone
 
 import odoo
 
