@@ -794,7 +794,8 @@ class importer(object):
                             countmfg_created += 1
                             # Remember odoo name for the MO reference passed by frepple.
                             # This mapping is later used when importing WO.
-                            mo_references[elem.get("reference")] = mo
+                            if elem.get("reference") not in mo_references:
+                                mo_references[elem.get("reference")] = mo
                             self.env.flush_all()
                             mo._create_update_move_finished()
                             self.env.flush_all()
