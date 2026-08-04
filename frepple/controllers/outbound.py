@@ -1284,7 +1284,7 @@ class exporter(object):
                     1 if tmpl["total_consumption"] else 0
                 )
             if tmpl.get("product_type_operation"):
-                yield '<stringproperty name="product_type_operation" value=%s/>' % (
+                yield '<stringproperty name="product_type_operation" value="%s"/>' % (
                     tmpl["product_type_operation"][0],
                 )
 
