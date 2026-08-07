@@ -3059,8 +3059,8 @@ class exporter(object):
                             ) + (-qty_flow / qty)
                     for key, val in operation_materials.items():
                         yield '<flow xsi:type="flow_start" quantity="%s"><item name=%s/></flow>\n' % (
-                            val,
-                            round(quoteattr(key), 3),
+                            round(val, 3),
+                            quoteattr(key),
                         )
                     yield "</flows>"
                     if (
