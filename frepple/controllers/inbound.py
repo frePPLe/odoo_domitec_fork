@@ -803,9 +803,7 @@ class importer(object):
                             create = True
 
                             for wo in mo.workorder_ids:
-                                wo.duration_expected = float(
-                                    elem.get("duration_per")
-                                ) * float(elem.get("quantity"))
+                                wo.duration_expected = float(elem.get("duration_per"))
                                 break
 
                         else:
