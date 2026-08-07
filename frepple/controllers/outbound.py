@@ -2959,7 +2959,7 @@ class exporter(object):
                 loads = {}
                 for wo in getattr(i, "workorder_ids", []):
                     # Get remaining duration of the WO
-                    time_left = wo.duration_expected - wo.duration_unit
+                    time_left = round(wo.duration_expected - wo.duration_unit)
                     if wo.is_user_working and wo.time_ids:
                         # The WO is currently being worked on
                         for tm in wo.time_ids:
@@ -3005,7 +3005,7 @@ class exporter(object):
                         suboperation = suboperation[0:300]
 
                     # Get remaining duration of the WO
-                    time_left = wo.duration_expected - wo.duration_unit
+                    time_left = round(wo.duration_expected - wo.duration_unit)
                     if wo.is_user_working and wo.time_ids:
                         # The WO is currently being worked on
                         for tm in wo.time_ids:
