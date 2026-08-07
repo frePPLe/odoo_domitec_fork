@@ -2948,7 +2948,7 @@ class exporter(object):
                         )
                 for key in operation_materials:
                     yield '<flow xsi:type="flow_start" quantity="%s"><item name=%s/></flow>\n' % (
-                        operation_materials[key],
+                        round(operation_materials[key], 3),
                         quoteattr(key),
                     )
                 yield '<flow xsi:type="flow_end" quantity="1"><item name=%s/></flow>\n' % (
@@ -3060,7 +3060,7 @@ class exporter(object):
                     for key, val in operation_materials.items():
                         yield '<flow xsi:type="flow_start" quantity="%s"><item name=%s/></flow>\n' % (
                             val,
-                            quoteattr(key),
+                            round(quoteattr(key), 3),
                         )
                     yield "</flows>"
                     if (
