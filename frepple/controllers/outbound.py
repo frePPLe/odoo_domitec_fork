@@ -2837,18 +2837,10 @@ class exporter(object):
         ):
             # Filter out irrelevant manufacturing orders
             location = self.map_locations.get(i.location_dest_id.id, None)
+            if not location:
+                continue
             operation = i.name
             type = "MO"
-            if not location and i.picking_type_id:
-                # For subcontracting MO we find the warehouse on the operation type
-                operation_type = self.operation_types.get(i.picking_type_id.id, None)
-                if operation_type:
-                    location = operation_type["warehouse_id"]
-                    if location:
-                        code = self.subcontracting_mo_po_mapping.get(i.id, None)
-                        if code:
-                            operation = code
-                            type = "subcontractor"
             item = self.product_product.get(i.product_id.id, None)
             if not item or not location:
                 continue
@@ -2932,11 +2924,11 @@ class exporter(object):
                 operation_materials = {}
                 for mv in (i.move_raw_ids if type != "subcontractor" else None) or []:
                     consumed_item = self.product_product.get(mv.product_id.id, None)
-                    if not consumed_item or mv.state in ("done", "cancelled"):
+                    if not consumed_item or mv.state in ("done", "cancel"):
                         continue
                     default_uom = mv.product_id.uom_id
                     qty_flow = mv.product_uom._compute_quantity(
-                        mv.product_uom_qty, default_uom
+                        mv.product_uom_qty - mv.quantity, default_uom
                     )
                     for l in mv.move_line_ids:
                         if l.state == "done":
@@ -2945,15 +2937,7 @@ class exporter(object):
                             )
                     if self.respect_reservations:
                         for l in mv.move_line_ids | mv.move_orig_ids.move_line_ids:
-                            if (
-                                # Normal reservation case
-                                mv.procure_method != "make_to_order"
-                                and l.state == "assigned"
-                            ) or (
-                                # Special case for multi-level MTO chains
-                                mv.procure_method == "make_to_order"
-                                and mv.state == "waiting"
-                            ):
+                            if l.state == "assigned" and l.move_id.picking_id:
                                 qty_flow -= l.product_uom_id._compute_quantity(
                                     l.quantity, default_uom
                                 )
@@ -3052,11 +3036,11 @@ class exporter(object):
                             if wo.id != i.workorder_ids[-1].id:
                                 continue
                         item = self.product_product.get(mv.product_id.id, None)
-                        if not item or mv.state in ("done", "cancelled"):
+                        if not item or mv.state in ("done", "cancel"):
                             continue
                         default_uom = mv.product_id.uom_id
                         qty_flow = mv.product_uom._compute_quantity(
-                            mv.product_uom_qty, default_uom
+                            mv.product_uom_qty - mv.quantity, default_uom
                         )
                         for l in mv.move_line_ids:
                             if l.state == "done":
@@ -3065,21 +3049,7 @@ class exporter(object):
                                 )
                         if self.respect_reservations:
                             for l in mv.move_line_ids | mv.move_orig_ids.move_line_ids:
-                                if (
-                                    # Normal reservation case
-                                    mv.procure_method != "make_to_order"
-                                    and l.state == "assigned"
-                                ) or (
-                                    # Special case for multi-level MTO chains
-                                    mv.procure_method == "make_to_order"
-                                    and mv.state
-                                    not in (
-                                        "waiting",
-                                        "waiting availability",
-                                        "available",
-                                        "partially_available",
-                                    )
-                                ):
+                                if l.state == "assigned" and l.move_id.picking_id:
                                     qty_flow -= l.product_uom_id._compute_quantity(
                                         l.quantity, default_uom
                                     )
@@ -3193,12 +3163,13 @@ class exporter(object):
                             wo_date = ' start="%s"' % self.formatDateTime(dt)
                     except Exception:
                         wo_date = ""
+                    woref = quoteattr("%s - %s" % (suboperation, wo.id))
                     yield '<operationplan type="MO" reference=%s%s quantity="%s" status="%s"><operation name=%s/><owner reference=%s/>' % (
-                        quoteattr(wo.display_name),
+                        woref,
                         wo_date,
                         qty,
                         state,
-                        quoteattr("%s - %s" % (suboperation, wo.id)),
+                        woref,
                         quoteattr(i.name),
                     )
                     if (
