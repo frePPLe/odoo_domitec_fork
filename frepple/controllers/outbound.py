@@ -3268,6 +3268,7 @@ class exporter(object):
         else:
             for i in self.generator.getData(
                 "stock.warehouse.orderpoint",
+                search=[("route_id.name", "=", "Comprar")],
                 fields=[
                     "warehouse_id",
                     "product_id",
