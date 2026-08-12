@@ -1101,6 +1101,8 @@ class exporter(object):
                 "sequence_nbr",
                 "total_consumption",
                 "product_type_operation",
+                "summarize_by",
+                "summarize_multiple",
             ]
             + (
                 [
@@ -1309,9 +1311,14 @@ class exporter(object):
                 yield '<stringproperty name="brand_id" value=%s/>' % (
                     quoteattr(tmpl["brand_id"][1]),
                 )
-            if tmpl["aroma_id"]:
-                yield '<stringproperty name="aroma_id" value=%s/>' % (
-                    quoteattr(tmpl["aroma_id"][1]),
+            if tmpl["summarize_by"]:
+                yield '<stringproperty name="summarize_by" value=%s/>' % (
+                    quoteattr(tmpl["summarize_by"]),
+                )
+
+            if tmpl["summarize_multiple"]:
+                yield '<doubleproperty name="summarize_multiple" value=%s/>' % (
+                    quoteattr(tmpl["summarize_multiple"]),
                 )
 
             # Export suppliers for the item, if the item is allowed to be purchased
