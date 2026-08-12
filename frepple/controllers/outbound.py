@@ -1311,15 +1311,18 @@ class exporter(object):
                 yield '<stringproperty name="brand_id" value=%s/>' % (
                     quoteattr(tmpl["brand_id"][1]),
                 )
-            if tmpl["summarize_by"]:
-                yield '<stringproperty name="summarize_by" value=%s/>' % (
-                    quoteattr(tmpl["summarize_by"]),
-                )
+            try:
+                if tmpl["summarize_by"]:
+                    yield '<stringproperty name="summarize_by" value=%s/>' % (
+                        quoteattr(tmpl["summarize_by"]),
+                    )
 
-            if tmpl["summarize_multiple"] is not None:
-                yield '<doubleproperty name="summarize_multiple" value="%s"/>' % (
-                    tmpl["summarize_multiple"],
-                )
+                if tmpl["summarize_multiple"] is not None:
+                    yield '<doubleproperty name="summarize_multiple" value="%s"/>' % (
+                        tmpl["summarize_multiple"],
+                    )
+            except:
+                yield f"<!-- failed fetching summarize attributes for {name} {tmpl["summarize_by"]} {tmpl["summarize_multiple"]} -->"
 
             # Export suppliers for the item, if the item is allowed to be purchased
             if tmpl["purchase_ok"]:
