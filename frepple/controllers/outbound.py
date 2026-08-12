@@ -405,19 +405,9 @@ class exporter(object):
         hours = int(d.seconds // 3600)
         minutes = int((d.seconds % 3600) // 60)
 
-        # Combine remaining seconds and microseconds into a single float
-        seconds_float = (d.seconds % 60) + (d.microseconds / 1_000_000)
+        seconds = round((d.seconds % 60) + (d.microseconds / 1_000_000))
 
-        # Format seconds: %g removes trailing zeros, or use %.3f for strict 3-decimal precision
-        # Example using %.3f: "P%dDT%dH%dM%.3fS"
-        # Stripping trailing zeros if they aren't needed makes it cleaner:
-        seconds_str = (
-            ("%.3f" % seconds_float).rstrip("0").rstrip(".")
-            if d.microseconds
-            else "%d" % seconds_float
-        )
-
-        return "P%dDT%dH%dM%sS" % (d.days, hours, minutes, seconds_str)
+        return "P%dDT%dH%dM%dS" % (d.days, hours, minutes, seconds)
 
     def formatDateTime(self, d, tmzone=None):
         # 1. Ensure d is a datetime
