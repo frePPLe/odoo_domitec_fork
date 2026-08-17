@@ -2905,11 +2905,7 @@ class exporter(object):
                 qty,
                 # In the "approved" status, frepple can still reschedule the MO in function of material and capacity
                 # In the "confirmed" status, frepple sees the MO as frozen and unchangeable
-                (
-                    "approved"
-                    if self.manage_work_orders or i.state in ("confirmed", "draft")
-                    else "confirmed"
-                ),
+                "confirmed",
             )
 
             if not self.manage_work_orders or not getattr(i, "workorder_ids", None):
@@ -3164,7 +3160,7 @@ class exporter(object):
 
                     # In the "approved" status, frepple can still reschedule the MO in function of material and capacity
                     # In the "confirmed" status, frepple sees the MO as frozen and unchangeable
-                    if wo.state == "progress":
+                    if wo.state in ("progress", "confirmed"):
                         state = "confirmed"
                     elif wo.state in ("done", "to_close", "cancel"):
                         state = "completed"
