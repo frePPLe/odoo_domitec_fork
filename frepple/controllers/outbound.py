@@ -3007,9 +3007,9 @@ class exporter(object):
                     if (
                         wo.workcenter_id
                         and wo.workcenter_id.id in self.map_workcenters
-                        and wo.workcenter_id.efficiency < efficiency
+                        and wo.workcenter_id.time_efficiency < efficiency
                     ):
-                        efficiency = wo.workcenter_id.efficiency
+                        efficiency = wo.workcenter_id.time_efficiency
 
                     # 2. The secondary work centers
                     if wo.operation_id:
@@ -3024,9 +3024,9 @@ class exporter(object):
                                 if (
                                     wo_sec.workcenter_id.owner
                                     and wo_sec.workcenter_id.owner == sec.workcenter_id
-                                    and sec.workcenter_id.efficiency < efficiency
+                                    and sec.workcenter_id.time_efficiency < efficiency
                                 ):
-                                    efficiency = sec.workcenter_id
+                                    efficiency = sec.workcenter_id.time_efficiency
 
                     suboperation = wo.display_name
                     if self.has_length_limits and len(suboperation) > 300:
