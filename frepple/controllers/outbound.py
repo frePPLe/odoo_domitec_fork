@@ -3000,6 +3000,34 @@ class exporter(object):
                     i.operation_id.id for i in i.workorder_ids if i.operation_id
                 }
                 for wo in i.workorder_ids:
+
+                    # We need to compute the efficiency
+                    # 1. The primary work center
+                    efficiency = 1
+                    if (
+                        wo.workcenter_id
+                        and wo.workcenter_id.id in self.map_workcenters
+                        and wo.workcenter_id.efficiency < efficiency
+                    ):
+                        efficiency = wo.workcenter_id.efficiency
+
+                    # 2. The secondary work centers
+                    if wo.operation_id:
+                        for wo_sec in wo.secondary_workcenters:
+                            if (
+                                not wo_sec.workcenter_id
+                                or wo_sec.workcenter_id.id not in self.map_workcenters
+                                or wo_sec.workcenter_id == wo.workcenter_id
+                            ):
+                                continue
+                            for sec in wo.operation_id.secondary_workcenter:
+                                if (
+                                    wo_sec.workcenter_id.owner
+                                    and wo_sec.workcenter_id.owner == sec.workcenter_id
+                                    and sec.workcenter_id.efficiency < efficiency
+                                ):
+                                    efficiency = sec.workcenter_id
+
                     suboperation = wo.display_name
                     if self.has_length_limits and len(suboperation) > 300:
                         suboperation = suboperation[0:300]
@@ -3013,6 +3041,9 @@ class exporter(object):
                                 time_left -= round(
                                     (now - tm.date_start).total_seconds() / 60
                                 )
+
+                    # apply the efficiency
+                    time_left *= efficiency
 
                     yield '<suboperation><operation name=%s priority="%s" type="operation_fixed_time" category="WO" duration="%s"><location name=%s/><flows>' % (
                         quoteattr("%s - %s" % (suboperation, wo.id)),
