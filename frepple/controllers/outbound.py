@@ -3003,7 +3003,7 @@ class exporter(object):
 
                     # We need to compute the efficiency
                     # 1. The primary work center
-                    efficiency = 1
+                    efficiency = 100
                     if (
                         wo.workcenter_id
                         and wo.workcenter_id.id in self.map_workcenters
@@ -3043,7 +3043,7 @@ class exporter(object):
                                 )
 
                     # apply the efficiency
-                    time_left *= efficiency
+                    time_left *= efficiency / 100.0
 
                     yield '<suboperation><operation name=%s priority="%s" type="operation_fixed_time" category="WO" duration="%s"><location name=%s/><flows>' % (
                         quoteattr("%s - %s" % (suboperation, wo.id)),
