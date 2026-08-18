@@ -2836,7 +2836,7 @@ class exporter(object):
             object=True,
         ):
             # Filter out irrelevant manufacturing orders
-            location = self.map_locations.get(i.location_dest_id.id, None)
+            location = "WHD"
             if not location:
                 continue
             operation = i.name
