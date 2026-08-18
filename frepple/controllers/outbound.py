@@ -3173,7 +3173,8 @@ class exporter(object):
                             if wo.is_user_working:
                                 dt = now
                             else:
-                                dt = (
+                                dt = max(
+                                    (
                                         wo.date_start
                                         if wo.date_start
                                         else (
@@ -3181,7 +3182,9 @@ class exporter(object):
                                             if wo.date_start
                                             else i.date_start
                                         )
-                                    )
+                                    ),
+                                    now,
+                                )
                             wo_date = ' start="%s"' % self.formatDateTime(dt)
                     except Exception:
                         wo_date = ""
