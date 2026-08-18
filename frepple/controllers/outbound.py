@@ -3183,7 +3183,7 @@ class exporter(object):
                                             else i.date_start
                                         )
                                     ),
-                                    now,
+                                    datetime(year=2020, month=1, day=1),
                                 )
                             wo_date = ' start="%s"' % self.formatDateTime(dt)
                     except Exception:
