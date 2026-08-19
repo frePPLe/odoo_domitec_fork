@@ -1105,6 +1105,7 @@ class exporter(object):
                 "product_type_operation",
                 "summarize_by",
                 "summarize_multiple",
+                "fcst_max_lateness",
             ]
             + (
                 [
@@ -1312,6 +1313,10 @@ class exporter(object):
             if tmpl["brand_id"]:
                 yield '<stringproperty name="brand_id" value=%s/>' % (
                     quoteattr(tmpl["brand_id"][1]),
+                )
+            if tmpl["fcst_max_lateness"]:
+                yield '<stringproperty name="fcst_max_lateness" value="%s"/>' % (
+                    tmpl["fcst_max_lateness"],
                 )
             try:
                 if tmpl["summarize_by"]:
