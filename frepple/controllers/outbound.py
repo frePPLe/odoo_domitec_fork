@@ -936,6 +936,8 @@ class exporter(object):
                 "constrained",
                 "time_start",
                 "time_stop",
+                "wc_max_calendar",
+                "wc_max_early",
             ],
         ):
             if first:
@@ -964,8 +966,13 @@ class exporter(object):
             self.map_setup_time[i["id"]] = (i["time_start"] or 0) + (
                 i["time_stop"] or 0
             )
-            yield '<resource name=%s maximum="%s" category="%s" subcategory="%s" constrained="%s" efficiency="%s"><location name=%s/>%s%s</resource>\n' % (
+            yield '<resource name=%s %smaximum="%s" category="%s" subcategory="%s" constrained="%s" efficiency="%s"><location name=%s/>%s%s%s</resource>\n' % (
                 quoteattr(name),
+                (
+                    ('maxearly="%s" ' % (self.convert_float_time(i["wc_max_early"]),))
+                    if i["wc_max_early"]
+                    else ""
+                ),
                 i["default_capacity"],
                 i["id"],
                 # Use this line if the tool use is independent of the MO quantity
@@ -977,6 +984,11 @@ class exporter(object):
                 quoteattr(self.mfg_location),
                 ("<owner name=%s/>" % quoteattr(owner[1])) if owner else "",
                 ("<available name=%s/>" % quoteattr(available[1])) if available else "",
+                (
+                    ("<maximum_calendar name=%s/>" % quoteattr(i["wc_max_calendar"]))
+                    if i["wc_max_calendar"]
+                    else ""
+                ),
             )
         if not first:
             yield "</resources>\n"
