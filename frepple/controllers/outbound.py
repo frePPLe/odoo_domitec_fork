@@ -1548,6 +1548,7 @@ class exporter(object):
                 "sequence",
                 "code",
                 "product_qty_multiple",
+                "product_qty_maximum",
             ],
         ):
             # Determine the location
@@ -1673,6 +1674,15 @@ class exporter(object):
                             )
                             if multipleQty > 0:
                                 yield "<size_multiple>%s</size_multiple>\n" % multipleQty
+                        # Handle maximum quantity of a bom (frepple custom extra field)
+                        if i.get("product_qty_maximum", 0) > 0:
+                            maximumQty = self.convert_qty_uom(
+                                i["product_qty_maximum"],
+                                i["product_uom_id"],
+                                i["product_tmpl_id"][0],
+                            )
+                            if maximumQty > 0:
+                                yield "<size_maximum>%s</size_maximum>\n" % maximumQty
 
                         # Handle produced quantity of a bom
                         producedQty = self.convert_qty_uom(
@@ -1858,6 +1868,15 @@ class exporter(object):
                             )
                             if multipleQty > 0:
                                 yield "<size_multiple>%s</size_multiple>\n" % multipleQty
+                        # Handle maximum quantity of a bom (frepple custom extra field)
+                        if i.get("product_qty_maximum", 0) > 0:
+                            maximumQty = self.convert_qty_uom(
+                                i["product_qty_maximum"],
+                                i["product_uom_id"],
+                                i["product_tmpl_id"][0],
+                            )
+                            if maximumQty > 0:
+                                yield "<size_maximum>%s</size_maximum>\n" % maximumQty
 
                         # Handle produced quantity of a bom
                         producedQty = (
