@@ -1869,6 +1869,7 @@ class exporter(object):
                             if multipleQty > 0:
                                 yield "<size_multiple>%s</size_multiple>\n" % multipleQty
                         # Handle maximum quantity of a bom (frepple custom extra field)
+                        maximumQty = None
                         if i.get("product_qty_maximum", 0) > 0:
                             maximumQty = self.convert_qty_uom(
                                 i["product_qty_maximum"],
@@ -2022,7 +2023,7 @@ class exporter(object):
                                     step["workcenter_id"][0]
                                 ].get("post_operation_time", 0)
 
-                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration="%s" duration_per="%s" category=%s posttime="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>\n' % (
+                            yield "<suboperation>" '<operation name=%s %spriority="%s" duration="%s" duration_per="%s" category=%s posttime="%s" xsi:type="operation_time_per">\n' "<location name=%s/>\n" '<loads><load quantity="%f" search=%s><resource name=%s/>%s</load>%s</loads>%s\n' % (
                                 quoteattr(name),
                                 (
                                     ("description=%s " % quoteattr(i["code"]))
@@ -2075,6 +2076,11 @@ class exporter(object):
                                     else ""
                                 ),
                                 secondary_workcenter_str,
+                                (
+                                    ("<size_maximum>%s</size_maximum>\n" % maximumQty)
+                                    if maximumQty
+                                    else ""
+                                ),
                             )
                             first_flow = True
                             for j in fl.values():
