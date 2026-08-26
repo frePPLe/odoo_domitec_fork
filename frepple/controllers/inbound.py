@@ -63,6 +63,9 @@ class importer(object):
         except Exception:
             self.timezone = timezone("UTC")
 
+        # Incoming frePPLe datetimes are local Buenos Aires time.
+        self.inbound_timezone = timezone("America/Argentina/Buenos_Aires")
+
         # User to be set as responsible on new objects in incremental exports
         self.actual_user = req.httprequest.form.get("actual_user", None)
         if self.mode == 2 and self.actual_user:
@@ -74,6 +77,23 @@ class importer(object):
                 self.actual_user = None
         else:
             self.actual_user = None
+
+    def _inbound_to_utc(self, value):
+        if not value:
+            return None
+        try:
+            return (
+                self.inbound_timezone.localize(
+                    datetime.strptime(
+                        value,
+                        "%Y-%m-%d %H:%M:%S",
+                    )
+                )
+                .astimezone(UTC)
+                .replace(tzinfo=None)
+            )
+        except Exception:
+            return None
 
     def run(self):
         msg = []
@@ -234,31 +254,13 @@ class importer(object):
                     st = elem.get("start")
                     if st:
                         try:
-                            wo["start"] = (
-                                self.timezone.localize(
-                                    datetime.strptime(
-                                        st,
-                                        "%Y-%m-%d %H:%M:%S",
-                                    )
-                                )
-                                .astimezone(UTC)
-                                .replace(tzinfo=None)
-                            )
+                            wo["start"] = self._inbound_to_utc(st)
                         except Exception:
                             pass
                     nd = elem.get("end")
-                    if st:
+                    if nd:
                         try:
-                            wo["end"] = (
-                                self.timezone.localize(
-                                    datetime.strptime(
-                                        nd,
-                                        "%Y-%m-%d %H:%M:%S",
-                                    )
-                                )
-                                .astimezone(UTC)
-                                .replace(tzinfo=None)
-                            )
+                            wo["end"] = self._inbound_to_utc(nd)
                         except Exception:
                             pass
                     wo_data.append(wo)
@@ -285,30 +287,8 @@ class importer(object):
 
                         supplier_id = int(elem.get("supplier").rsplit(" ", 1)[-1])
                         quantity = float(elem.get("quantity"))
-                        date_planned = elem.get("end")
-                        if date_planned:
-                            date_planned = (
-                                self.timezone.localize(
-                                    datetime.strptime(
-                                        date_planned,
-                                        "%Y-%m-%d %H:%M:%S",
-                                    )
-                                )
-                                .astimezone(UTC)
-                                .replace(tzinfo=None)
-                            )
-                        date_ordered = elem.get("start")
-                        if date_ordered:
-                            date_ordered = (
-                                self.timezone.localize(
-                                    datetime.strptime(
-                                        date_ordered,
-                                        "%Y-%m-%d %H:%M:%S",
-                                    )
-                                )
-                                .astimezone(UTC)
-                                .replace(tzinfo=None)
-                            )
+                        date_planned = self._inbound_to_utc(elem.get("end"))
+                        date_ordered = self._inbound_to_utc(elem.get("start"))
 
                         # Is that an update of an existing PO ?
                         status = elem.get("status")
@@ -531,7 +511,7 @@ class importer(object):
                             self.do_index += 1
                         product = self.env["product.product"].browse(int(item_id))
                         quantity = elem.get("quantity")
-                        date_shipping = elem.get("start")
+                        date_shipping = self._inbound_to_utc(elem.get("start"))
                         origin = elem.get("origin")
                         destination = elem.get("destination")
 
@@ -584,18 +564,7 @@ class importer(object):
                             )
                             continue
 
-                        if date_shipping:
-                            date_shipping = (
-                                self.timezone.localize(
-                                    datetime.strptime(
-                                        date_shipping,
-                                        "%Y-%m-%d %H:%M:%S",
-                                    )
-                                )
-                                .astimezone(UTC)
-                                .replace(tzinfo=None)
-                            )
-                        else:
+                        if not date_shipping:
                             date_shipping = (
                                 datetime.now().astimezone(UTC).replace(tzinfo=None)
                             )
@@ -674,22 +643,12 @@ class importer(object):
                                     continue
                                 if wo:
                                     data = {
-                                        "date_start": self.timezone.localize(
-                                            datetime.strptime(
-                                                elem.get("start"),
-                                                "%Y-%m-%d %H:%M:%S",
-                                            )
-                                        )
-                                        .astimezone(UTC)
-                                        .replace(tzinfo=None),
-                                        "date_finished": self.timezone.localize(
-                                            datetime.strptime(
-                                                elem.get("end"),
-                                                "%Y-%m-%d %H:%M:%S",
-                                            )
-                                        )
-                                        .astimezone(UTC)
-                                        .replace(tzinfo=None),
+                                        "date_start": self._inbound_to_utc(
+                                            elem.get("start")
+                                        ),
+                                        "date_finished": self._inbound_to_utc(
+                                            elem.get("end")
+                                        ),
                                     }
                                     for res_id in resources:
                                         res = mfg_workcenter.search(
@@ -777,8 +736,12 @@ class importer(object):
                             mo = mfg_order.with_context(context).create(
                                 {
                                     "product_qty": elem.get("quantity"),
-                                    "date_start": elem.get("start"),
-                                    "date_finished": elem.get("end"),
+                                    "date_start": self._inbound_to_utc(
+                                        elem.get("start")
+                                    ),
+                                    "date_finished": self._inbound_to_utc(
+                                        elem.get("end")
+                                    ),
                                     "product_id": int(item_id),
                                     "company_id": self.company.id,
                                     "product_uom_id": int(uom_id),
@@ -832,8 +795,12 @@ class importer(object):
                                     )
                                     cpq.change_prod_qty()
                                 arg_dict = {
-                                    "date_start": elem.get("start"),
-                                    "date_finished": elem.get("end"),
+                                    "date_start": self._inbound_to_utc(
+                                        elem.get("start")
+                                    ),
+                                    "date_finished": self._inbound_to_utc(
+                                        elem.get("end")
+                                    ),
                                     "origin": remark,
                                 }
                                 # Odoo doesn't allow updating the start date of the MO if one WO is in progress
