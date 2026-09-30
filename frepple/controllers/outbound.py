@@ -1316,7 +1316,7 @@ class exporter(object):
                 )
             if tmpl["aroma_id"]:
                 yield '<stringproperty name="aroma_id" value="%s"/>' % (
-                    tmpl["aroma_id"],
+                    tmpl["aroma_id"][1],
                 )
             if tmpl["fcst_max_lateness"]:
                 yield '<stringproperty name="fcst_max_lateness" value="%s"/>' % (
