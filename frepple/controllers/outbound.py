@@ -3295,7 +3295,7 @@ class exporter(object):
         orderpoints_by_warehouse_product = {}
         for i in self.generator.getData(
             "stock.warehouse.orderpoint",
-            search=[("route_id.name","=","Comprar")]
+            search=[("route_id.name", "=", "Comprar")],
             fields=[
                 "warehouse_id",
                 "product_id",
