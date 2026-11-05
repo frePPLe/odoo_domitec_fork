@@ -3295,6 +3295,7 @@ class exporter(object):
         orderpoints_by_warehouse_product = {}
         for i in self.generator.getData(
             "stock.warehouse.orderpoint",
+            search=[("route_id.name","=","Comprar")]
             fields=[
                 "warehouse_id",
                 "product_id",
@@ -3314,6 +3315,8 @@ class exporter(object):
                 if i["warehouse_id"]
                 else None
             )
+            if warehouse == "WHV":
+                warehouse = "WHD"
             if not warehouse:
                 continue
             uom_factor = self.convert_qty_uom(
