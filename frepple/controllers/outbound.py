@@ -3512,7 +3512,7 @@ class exporter(object):
             self.generator.env.cr.execute(
                 "SELECT product_id, stock_quant.location_id, sum(quantity), sum(reserved_quantity) "
                 "FROM stock_quant "
-                "INNER JOIN stock_location ON stock_quant.location_id = stock_location.id "
+                "INNER JOIN stock_location ON stock_quant.location_id = stock_location.id and stock_location.storage_category_id is null "
                 "WHERE quantity > 0 "
                 "AND stock_location.scrap_location is distinct from true "
                 "AND stock_location.usage = 'internal' "
